@@ -107,7 +107,8 @@ public class Bayespam
             while ((line = in.readLine()) != null)                      // read a line
             {
             	System.out.println("Before: " + line);
-            	line.replaceAll("[^a-zA-Z]{3}[^a-zA-Z]+","");
+		line = " " + line.replaceAll("[^a-zA-Z\\s]", "") + " ";
+            	line = line.replaceAll("(\\s+([a-zA-Z]{1,3}\\s+)+)+"," ");
                 StringTokenizer st = new StringTokenizer(line);         // parse it into words
             	System.out.println("After: " + line);
                 System.out.print("\n\n\n\n\n\n");

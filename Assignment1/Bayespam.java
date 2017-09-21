@@ -1,5 +1,6 @@
 import java.io.*;
 import java.util.*;
+import java.util.regex.Pattern;
 
 public class Bayespam
 {
@@ -105,8 +106,12 @@ public class Bayespam
             
             while ((line = in.readLine()) != null)                      // read a line
             {
+            	System.out.println("Before: " + line);
+            	line.replaceAll("[^a-zA-Z]{3}[^a-zA-Z]+","");
                 StringTokenizer st = new StringTokenizer(line);         // parse it into words
-        
+            	System.out.println("After: " + line);
+                System.out.print("\n\n\n\n\n\n");
+            	
                 while (st.hasMoreTokens())                  // while there are stille words left..
                 {
                     addWord(st.nextToken(), type);                  // add them to the vocabulary

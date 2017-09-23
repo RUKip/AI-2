@@ -33,7 +33,16 @@ public class Bayespam
 
     // A hash table for the vocabulary (word searching is very fast in a hash table)
     private static Hashtable <String, Multiple_Counter> vocab = new Hashtable <String, Multiple_Counter> ();
+    private static Hashtable <String, Double> cclRegular = new Hashtable <String, Double> ();
+    private static Hashtable <String, Double> cclSpam = new Hashtable <String, Double> ();
 
+    
+    private static final int tuningParameter = 1;
+    private static double probRegular;
+	private static double probSpam;
+    private static int totalRegularWords = 0;
+	private static int totalSpamWords = 0;
+    
     
     // Add a word to the vocabulary
     private static void addWord(String word, MessageType type)
@@ -47,7 +56,6 @@ public class Bayespam
 
         vocab.put(word, counter);                       // put the word with its counter into the hashtable
     }
-
 
     // List the regular and spam messages
     private static void listDirs(File dir_location)
@@ -106,10 +114,8 @@ public class Bayespam
             
             while ((line = in.readLine()) != null)                      // read a line
             {
-            	///Below line removes all non characters, using regex
-            	line = " " + line.replaceAll("[^a-zA-Z\\s]", "") + " ";            	
-            	///Below line removes all words that are now smaller then 4, using regex
-            	line = line.replaceAll("(\\s+([a-zA-Z]{1,3}\\s+)+)+"," ");
+
+            	line = cleanLine(line);
             	
                 StringTokenizer st = new StringTokenizer(line);         // parse it into words
        
@@ -122,6 +128,104 @@ public class Bayespam
 
             in.close();
         }
+    }
+    
+    
+    /// Print the current content of the spam CCL
+    private static void printCCLSpam()
+    {
+        Double counter;
+
+        for (Enumeration<String> e = cclSpam.keys() ; e.hasMoreElements() ;)
+        {   
+            String word;
+            
+            word = e.nextElement();
+            counter  = cclSpam.get(word);
+            
+            System.out.println( word + " | CCL for spam : " + counter );
+        }
+    }
+
+    private static void printCCLRegular()
+    {
+        Double counter;
+
+        for (Enumeration<String> e = cclRegular.keys() ; e.hasMoreElements() ;)
+        {   
+            String word;
+            
+            word = e.nextElement();
+            counter  = cclRegular.get(word);
+            
+            System.out.println( word + " | CCL for Regular : " + counter );
+        }
+    }
+    
+    ///New methods below
+    private static String cleanLine(String line){
+    	///Below line removes all non alphabet characters, using regex
+    	line = " " + line.replaceAll("[^a-zA-Z\\s]", "") + " ";            	
+    	///Below line removes all words that are now smaller then 4, using regex
+    	line = line.replaceAll("(\\s+([a-zA-Z]{1,3}\\s+)+)+"," ");
+    	///Below line converts remaining string to lowercase
+    	line = line.toLowerCase();
+    	return line;
+    }
+    
+    private static void calcPReg(int regular, int spam){
+    	int totalNr = regular + spam;
+    	probRegular = (double) regular/totalNr;
+    }
+    
+    private static void calcPSpam(int regular, int spam){
+    	int totalNr = regular + spam;
+    	probSpam = (double) spam/totalNr;
+    }
+    
+    private static void countAllWords(){
+    	 Multiple_Counter counter = new Multiple_Counter();
+    	 
+         for (Enumeration<String> e = vocab.keys() ; e.hasMoreElements() ;)
+         {   
+             String word;
+             
+             word = e.nextElement();
+             counter  = vocab.get(word);
+             
+             totalRegularWords += counter.counter_regular;
+             totalSpamWords += counter.counter_spam;
+         }
+    }
+    
+    private static void calcCCL(){
+    	Multiple_Counter counter = new Multiple_Counter();
+    	 int regular, spam;
+         Double cclRegularValue, cclSpamValue;
+    	 for (Enumeration<String> e = vocab.keys() ; e.hasMoreElements() ;)
+         {   
+             String word;
+             
+             word = e.nextElement();
+             counter  = vocab.get(word);
+             
+             regular = counter.counter_regular;
+             spam = counter.counter_spam;
+             
+             if(regular != 0){
+            	cclRegularValue = (double) regular/totalRegularWords;
+             }else{
+            	cclRegularValue = (double) tuningParameter/totalRegularWords;
+             }
+             if(spam != 0){
+            	 cclSpamValue = (double) spam/totalSpamWords;
+             }else{
+            	 cclSpamValue = (double) tuningParameter/totalSpamWords;
+             }
+             cclRegular.put(word, cclRegularValue);
+             cclSpam.put(word, cclSpamValue);
+             
+         }
     }
    
     public static void main(String[] args)
@@ -145,7 +249,7 @@ public class Bayespam
         readMessages(MessageType.SPAM);
 
         // Print out the hash table
-        printVocab();
+        //printVocab();
         
         // Now all students must continue from here:
         //
@@ -159,5 +263,20 @@ public class Bayespam
         // 8) Improve the code and the performance (speed, accuracy)
         //
         // Use the same steps to create a class BigramBayespam which implements a classifier using a vocabulary consisting of bigrams
+        
+        ///Below takes the regular.length and spam length and calls probability
+        System.out.println(listing_regular.length + " " + listing_spam.length);
+        calcPReg(listing_regular.length, listing_spam.length);
+        calcPSpam(listing_regular.length, listing_spam.length);
+        System.out.println(probSpam + " " + probRegular);
+
+        countAllWords();
+        
+        calcCCL();
+        
+        printCCLSpam();
+        
+        printCCLRegular();
+        
     }
 }

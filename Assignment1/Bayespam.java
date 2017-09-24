@@ -1,4 +1,5 @@
 import java.io.*;
+import java.lang.reflect.Array;
 import java.util.*;
 import java.util.regex.Pattern;
 
@@ -30,7 +31,8 @@ public class Bayespam
     // Listings of the two subdirectories (regular/ and spam/)
     private static File[] listing_regular = new File[0];
     private static File[] listing_spam = new File[0];
-
+    private static File[] listing_test = new File[0];
+    
     // A hash table for the vocabulary (word searching is very fast in a hash table)
     private static Hashtable <String, Multiple_Counter> vocab = new Hashtable <String, Multiple_Counter> ();
     private static Hashtable <String, Double> cclRegular = new Hashtable <String, Double> ();
@@ -221,12 +223,83 @@ public class Bayespam
             	 cclSpamValue = (double) spam/totalSpamWords;
              }else{
             	 cclSpamValue = (double) tuningParameter/totalSpamWords;
-             }
+             }	
+             
+             cclSpamValue = Math.log10(cclSpamValue);	///TODO: is this the point of 2.3? we take log 10
+             cclRegularValue = Math.log10(cclRegularValue);
+             
              cclRegular.put(word, cclRegularValue);
              cclSpam.put(word, cclSpamValue);
              
          }
     }
+    
+    //TODO: finish, after asking about details
+    private static void classifyMessage(File f) throws IOException{ 
+    	FileInputStream i_s = new FileInputStream(f);
+         BufferedReader in = new BufferedReader(new InputStreamReader(i_s));
+         String line;
+         String word;
+         String tag;
+         
+         double posteriRegular = probRegular;
+         double posteriSpam = probSpam;
+         
+         while ((line = in.readLine()) != null)                      // read a line
+         {
+
+         	line = cleanLine(line);
+         	
+             StringTokenizer st = new StringTokenizer(line);         // parse it into words
+    
+         	
+             while (st.hasMoreTokens())                  // while there are still words left..
+             {
+            	word = st.nextToken();
+                posteriRegular += cclRegular.get(word);                  // add them to the vocabulary
+                posteriSpam += cclSpam.get(word);
+             }
+         } 
+
+         if(posteriRegular > posteriSpam){
+        	 tag = "Regular";
+         }else{
+        	 tag = "Spam";
+         }
+         
+         System.out.println("Our file is tagged: " + tag + " Where spamposteri = " + posteriSpam + " and Where regularposteri = " + posteriRegular);
+         
+         in.close();
+    }
+    
+    
+    /// List the regular and spam messages as one giant set of test messages to be classified
+    private static void listTest(File dir_location)
+    {
+        // List all files in the directory passed
+        File[] dir_listing = dir_location.listFiles();
+
+        // Check that there are 2 subdirectories
+        if ( dir_listing.length != 2 )
+        {
+            System.out.println( "- Error: specified directory does not contain two subdirectories.\n" );
+            Runtime.getRuntime().exit(0);
+        }
+        
+        File[] listing1 = dir_listing[0].listFiles();
+        File[] listing2 = dir_listing[1].listFiles();
+        
+        
+        int aLen = listing1.length;
+        int bLen = listing2.length;
+
+        File[] c = (File[]) Array.newInstance(listing1.getClass().getComponentType(), aLen+bLen);
+        System.arraycopy(listing1, 0, c, 0, aLen);
+        System.arraycopy(listing2, 0, c, aLen, bLen);
+        
+        listing_test = c;
+    }
+
    
     public static void main(String[] args)
     throws IOException
@@ -265,18 +338,32 @@ public class Bayespam
         // Use the same steps to create a class BigramBayespam which implements a classifier using a vocabulary consisting of bigrams
         
         ///Below takes the regular.length and spam length and calls probability
-        System.out.println(listing_regular.length + " " + listing_spam.length);
         calcPReg(listing_regular.length, listing_spam.length);
         calcPSpam(listing_regular.length, listing_spam.length);
-        System.out.println(probSpam + " " + probRegular);
 
         countAllWords();
         
         calcCCL();
         
         printCCLSpam();
-        
         printCCLRegular();
+        
+        
+        // Location of the directory (the path) taken from the cmd line (second arg)
+        File dir_messages = new File( args[1] );
+        
+        // Check if the cmd line arg is a directory
+        if ( !dir_messages.isDirectory() )
+        {
+            System.out.println( "- Error: cmd line arg not a directory.\n" );
+            Runtime.getRuntime().exit(0);
+        }
+
+        listTest(dir_messages);
+        
+        ///TODO: loop all messages to the classifyMessage method
+        
+        classifyMessage(listing_test[43]);
         
     }
 }

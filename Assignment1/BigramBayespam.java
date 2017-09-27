@@ -146,7 +146,7 @@ public class BigramBayespam {
 	       
 	                while (st.hasMoreTokens())                  // while there are stille words left..
 	                {
-	                	currentWord = st.nextToken();					///TODO: fix?? Or is this the correct way? See email
+	                	currentWord = st.nextToken();				
 	                    if(!lastWord.equals("")) addBigram(lastWord + " " + currentWord, type);                  // add them to the vocabulary
 	                    lastWord = currentWord;
 	                }
@@ -250,7 +250,7 @@ public class BigramBayespam {
 	            	 cclSpamValue = (double) tuningParameter/totalSpamWords;
 	             }	
 	             
-	             cclSpamValue = Math.log10(cclSpamValue);	///TODO: is this the point of 2.3? we take log 10
+	             cclSpamValue = Math.log10(cclSpamValue);
 	             cclRegularValue = Math.log10(cclRegularValue);
 	             
 	             cclRegular.put(word, cclRegularValue);
@@ -267,7 +267,8 @@ public class BigramBayespam {
 	         String word;
 	         String tag;
 	         
-	         double posteriRegular = probRegular;
+	         //Posteri of regular and spam are initialized with the probablities
+	         double posteriRegular = probRegular;	
 	         double posteriSpam = probSpam;
 	         
 	         while ((line = in.readLine()) != null)                      // read a line
@@ -293,6 +294,8 @@ public class BigramBayespam {
 	         }
 	         
 	         System.out.println("Our file is tagged: " + tag + " Where spamposteri = " + posteriSpam + " and Where regularposteri = " + posteriRegular);
+	         //TODO: we got the tag and know the original folder, so now we put this into the confusion matrix here?? How does the confusion matrix look??
+	         
 	         
 	         in.close();
 	    }

@@ -39,7 +39,7 @@ public class BigramBayespam {
 	    private static Hashtable <String, Double> cclSpam = new Hashtable <String, Double> ();
 
 	    
-	    private static final int tuningParameter = 1;
+	    private static final double tuningParameter = 0.02;
 	    private static final int minimalWordSize = 3;
 	    private static final int minimumCount = 4;
 	    
@@ -146,6 +146,7 @@ public class BigramBayespam {
 
 	            	line = cleanLine(line);
 	            	
+	            	
 	                StringTokenizer st = new StringTokenizer(line);         // parse it into words
 	       
 	                while (st.hasMoreTokens())                  // while there are stille words left..
@@ -155,14 +156,15 @@ public class BigramBayespam {
 	                    lastWord = currentWord;
 	                }
 	                lastWord = "";
+	         
 	            }
 
 	            in.close();
 	        }
 	    }
 	    
-	    
-	    /// Print the current content of the spam CCL
+	   
+		/// Print the current content of the spam CCL
 	    private static void printCCLSpam()
 	    {
 	        Double counter;
@@ -257,6 +259,9 @@ public class BigramBayespam {
 	             cclSpamValue = Math.log10(cclSpamValue);
 	             cclRegularValue = Math.log10(cclRegularValue);
 	             
+	             //System.out.println("CCL spamValue = " + cclSpamValue);
+	             //System.out.println("CCL regularValue = " + cclRegularValue);
+	             
 	             cclRegular.put(word, cclRegularValue);
 	             cclSpam.put(word, cclSpamValue);
 	             
@@ -267,7 +272,7 @@ public class BigramBayespam {
 	    	FileInputStream i_s = new FileInputStream(f);
 	         BufferedReader in = new BufferedReader(new InputStreamReader(i_s));
 	         String line;
-	         String word;
+	         String word, lastWord = "";
 	         MessageType tag;
 	         
 	         ///Posteri of regular and spam are initialized with the probablities
@@ -280,23 +285,24 @@ public class BigramBayespam {
 	         	line = cleanLine(line);
 	         	
 	             StringTokenizer st = new StringTokenizer(line);         // parse it into words
-	         	
+	         	//TODO: add last word stuff
 	             while (st.hasMoreTokens())                  // while there are still words left..
 	             {
 	            	word = st.nextToken();
-	            	 if(cclRegular.get(word) != null){
-	            		 posteriRegular += cclRegular.get(word); 
-	            	 }else{
-	            		 posteriRegular += (double) tuningParameter/totalRegularWords;
-	            	 }
-	            	 if(cclSpam.get(word) != null){
-	            		 posteriSpam += cclSpam.get(word);
-	            	 }else{
-	            		 posteriSpam += (double) tuningParameter/totalSpamWords;
-	            	 }
+	            	if(!lastWord.equals("")){
+		            	if(cclRegular.get(lastWord + " " + word) != null){
+		            		 posteriRegular += cclRegular.get(lastWord + " " + word); 
+		            	 }
+		            	 if(cclSpam.get(lastWord + " " + word) != null){
+		            		 posteriSpam += cclSpam.get(lastWord + " " + word);
+		            	 }
+		             }
+	            	lastWord = word;
 	             }
+	             lastWord = "";
 	         } 
 
+	         System.out.println("Test PosteriRegular: " + posteriRegular + " PosteriSpam: " + posteriSpam);
 	         if(posteriRegular > posteriSpam){
 	        	 tag = MessageType.NORMAL;
 	        	 if(type.equals(tag)){
@@ -333,6 +339,7 @@ public class BigramBayespam {
 	        File[] spamListing = dir_listing[1].listFiles();	///We know this is the spam folder
 	        
 	        for(File listing : regularListing){
+	        	System.out.println("File name regular: " +listing.getName());
 	        	classifyMessage(listing, MessageType.NORMAL);
 	        }        
 	      
@@ -377,8 +384,8 @@ public class BigramBayespam {
 	        
 	        calcCCL();
 	        
-	        printCCLSpam();
-	        printCCLRegular();
+	        //printCCLSpam();
+	        //printCCLRegular();
 	        
 	        
 	        // Location of the directory (the path) taken from the cmd line (second arg)
@@ -398,6 +405,16 @@ public class BigramBayespam {
 	        System.out.println("False Postive count: " + falsePositive);
 	        System.out.println("True Negative count: " + trueNegative);
 	        System.out.println("False Negative count: " + falseNegative);
+	     
 	        
+	        int total = truePositive + falseNegative + trueNegative + falsePositive;
+	        double incorrectClassified = (double) (falsePositive+falseNegative)/total;
+	        double correctClassified = (double) (truePositive+trueNegative)/total;
+	        double correctClassifiedSpam = (double) (trueNegative)/(trueNegative+falsePositive);
+	        double correctClassifiedRegular = (double) (truePositive)/(truePositive+falseNegative);
+	        System.out.println("Total Correct classified: " + correctClassified*100 + "%");
+	        System.out.println("Total Incorrect classified: " + incorrectClassified*100 + "%");
+	        System.out.println("Correct classified spam: " + correctClassifiedSpam*100 + "%");
+	        System.out.println("Correct classified regular: " + correctClassifiedRegular*100 + "%");
 	    }
 }

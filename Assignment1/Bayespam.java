@@ -38,8 +38,8 @@ public class Bayespam
     private static Hashtable <String, Double> cclRegular = new Hashtable <String, Double> ();
     private static Hashtable <String, Double> cclSpam = new Hashtable <String, Double> ();
 
-    
-    private static final int tuningParameter = 1;
+    private static final int sizeOfRegularFolder = 28;	///We know this is the regular/spam folder based on size(this is the max size of regular)
+    private static final double tuningParameter = 0.02; ///We found lower value's are best at 0.02 is the turning point 
     private static double probRegular;
 	private static double probSpam;
     private static int totalRegularWords = 0;
@@ -77,8 +77,14 @@ public class Bayespam
             Runtime.getRuntime().exit(0);
         }
 
-        listing_regular = dir_listing[0].listFiles();
-        listing_spam    = dir_listing[1].listFiles();
+        if(dir_listing[0].listFiles().length<sizeOfRegularFolder){
+        	listing_regular = dir_listing[0].listFiles();
+        	listing_spam    = dir_listing[1].listFiles();
+        }else{
+        	listing_spam = dir_listing[0].listFiles();
+        	listing_regular    = dir_listing[1].listFiles();
+        }
+       
     }
 
     
@@ -262,13 +268,9 @@ public class Bayespam
             	word = st.nextToken();
             	 if(cclRegular.get(word) != null){
             		 posteriRegular += cclRegular.get(word); 
-            	 }else{
-            		 posteriRegular += (double) tuningParameter/totalRegularWords;
             	 }
             	 if(cclSpam.get(word) != null){
             		 posteriSpam += cclSpam.get(word);
-            	 }else{
-            		 posteriSpam += (double) tuningParameter/totalSpamWords;
             	 }
              }
          } 
@@ -305,8 +307,16 @@ public class Bayespam
             Runtime.getRuntime().exit(0);
         }
         
-        File[] regularListing = dir_listing[0].listFiles(); 	///We know this is the regular folder
-        File[] spamListing = dir_listing[1].listFiles();	///We know this is the spam folder
+        File[] regularListing; 	
+        File[] spamListing;	
+        if(dir_listing[0].listFiles().length<sizeOfRegularFolder){
+        	regularListing = dir_listing[0].listFiles();
+        	spamListing    = dir_listing[1].listFiles();
+        }else{
+        	regularListing = dir_listing[0].listFiles();
+        	spamListing    = dir_listing[1].listFiles();
+        }
+        
         
         for(File listing : regularListing){
         	classifyMessage(listing, MessageType.NORMAL);
@@ -382,6 +392,17 @@ public class Bayespam
         System.out.println("False Postive count: " + falsePositive);
         System.out.println("True Negative count: " + trueNegative);
         System.out.println("False Negative count: " + falseNegative);
+        
+        int total = truePositive + falseNegative + trueNegative + falsePositive;
+        double incorrectClassified = (double) (falsePositive+falseNegative)/total;
+        double correctClassified = (double) (truePositive+trueNegative)/total;
+        double correctClassifiedSpam = (double) (trueNegative)/(trueNegative+falsePositive);
+        double correctClassifiedRegular = (double) (truePositive)/(truePositive+falseNegative);
+
+        System.out.println("Total Correct classified: " + correctClassified*100 + "%");
+        System.out.println("Total Incorrect classified: " + incorrectClassified*100 + "%");
+        System.out.println("Correct classified spam: " + correctClassifiedSpam*100 + "%");
+        System.out.println("Correct classified regular: " + correctClassifiedRegular*100 + "%");
         
     }
 }

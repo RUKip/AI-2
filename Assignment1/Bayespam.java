@@ -256,13 +256,20 @@ public class Bayespam
          	line = cleanLine(line);
          	
              StringTokenizer st = new StringTokenizer(line);         // parse it into words
-    
          	
              while (st.hasMoreTokens())                  // while there are still words left..
              {
             	word = st.nextToken();
-                posteriRegular += cclRegular.get(word);                  // add them to the vocabulary
-                posteriSpam += cclSpam.get(word);
+            	 if(cclRegular.get(word) != null){
+            		 posteriRegular += cclRegular.get(word); 
+            	 }else{
+            		 posteriRegular += (double) tuningParameter/totalRegularWords;
+            	 }
+            	 if(cclSpam.get(word) != null){
+            		 posteriSpam += cclSpam.get(word);
+            	 }else{
+            		 posteriSpam += (double) tuningParameter/totalSpamWords;
+            	 }
              }
          } 
 
@@ -305,7 +312,7 @@ public class Bayespam
         	classifyMessage(listing, MessageType.NORMAL);
         }        
       
-        for(File listing : regularListing){
+        for(File listing : spamListing){
         	classifyMessage(listing, MessageType.SPAM);
         }        
     }
@@ -355,9 +362,8 @@ public class Bayespam
         
         calcCCL();
         
-        printCCLSpam();
-        printCCLRegular();
-        
+        //printCCLSpam();
+        //printCCLRegular();
         
         // Location of the directory (the path) taken from the cmd line (second arg)
         File dir_messages = new File( args[1] );

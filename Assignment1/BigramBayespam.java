@@ -48,7 +48,11 @@ public class BigramBayespam {
 	    private static int totalRegularWords = 0;
 		private static int totalSpamWords = 0;
 	    
-	    
+		private static int truePositive = 0;	///Regular and classified regular
+		private static int falsePositive = 0;	///Spam and classified regular
+		private static int trueNegative = 0;	///Spam and classified spam
+		private static int falseNegative = 0;	///Regular and classified spam
+		
 		private static void filterBigramCount(){
 
 			Multiple_Counter counter = new Multiple_Counter();
@@ -259,15 +263,14 @@ public class BigramBayespam {
 	         }
 	    }
 	    
-	    //TODO: finish, after asking about details
-	    private static void classifyMessage(File f) throws IOException{ 
+	    private static void classifyMessage(File f, MessageType type) throws IOException{ 
 	    	FileInputStream i_s = new FileInputStream(f);
 	         BufferedReader in = new BufferedReader(new InputStreamReader(i_s));
 	         String line;
 	         String word;
-	         String tag;
+	         MessageType tag;
 	         
-	         //Posteri of regular and spam are initialized with the probablities
+	         ///Posteri of regular and spam are initialized with the probablities
 	         double posteriRegular = probRegular;	
 	         double posteriSpam = probSpam;
 	         
@@ -277,32 +280,44 @@ public class BigramBayespam {
 	         	line = cleanLine(line);
 	         	
 	             StringTokenizer st = new StringTokenizer(line);         // parse it into words
-	    
 	         	
 	             while (st.hasMoreTokens())                  // while there are still words left..
 	             {
 	            	word = st.nextToken();
-	                posteriRegular += cclRegular.get(word);                  // add them to the vocabulary
-	                posteriSpam += cclSpam.get(word);
+	            	 if(cclRegular.get(word) != null){
+	            		 posteriRegular += cclRegular.get(word); 
+	            	 }else{
+	            		 posteriRegular += (double) tuningParameter/totalRegularWords;
+	            	 }
+	            	 if(cclSpam.get(word) != null){
+	            		 posteriSpam += cclSpam.get(word);
+	            	 }else{
+	            		 posteriSpam += (double) tuningParameter/totalSpamWords;
+	            	 }
 	             }
 	         } 
 
 	         if(posteriRegular > posteriSpam){
-	        	 tag = "Regular";
+	        	 tag = MessageType.NORMAL;
+	        	 if(type.equals(tag)){
+	        		 truePositive++;
+	        	 }else{
+	        		 falsePositive++;
+	        	 }
 	         }else{
-	        	 tag = "Spam";
-	         }
-	         
-	         System.out.println("Our file is tagged: " + tag + " Where spamposteri = " + posteriSpam + " and Where regularposteri = " + posteriRegular);
-	         //TODO: we got the tag and know the original folder, so now we put this into the confusion matrix here?? How does the confusion matrix look??
-	         
-	         
+	        	 tag = MessageType.SPAM;
+	        	 if(type.equals(tag)){
+	        		 trueNegative++;
+	        	 }else{
+	        		 falseNegative++;
+	        	 }
+	         }	         
 	         in.close();
 	    }
 	    
 	    
 	    /// List the regular and spam messages as one giant set of test messages to be classified
-	    private static void listTest(File dir_location)
+	    private static void listTest(File dir_location) throws IOException
 	    {
 	        // List all files in the directory passed
 	        File[] dir_listing = dir_location.listFiles();
@@ -314,19 +329,18 @@ public class BigramBayespam {
 	            Runtime.getRuntime().exit(0);
 	        }
 	        
-	        File[] listing1 = dir_listing[0].listFiles();
-	        File[] listing2 = dir_listing[1].listFiles();
+	        File[] regularListing = dir_listing[0].listFiles(); 	///We know this is the regular folder
+	        File[] spamListing = dir_listing[1].listFiles();	///We know this is the spam folder
 	        
-	        
-	        int aLen = listing1.length;
-	        int bLen = listing2.length;
-
-	        File[] c = (File[]) Array.newInstance(listing1.getClass().getComponentType(), aLen+bLen);
-	        System.arraycopy(listing1, 0, c, 0, aLen);
-	        System.arraycopy(listing2, 0, c, aLen, bLen);
-	        
-	        listing_test = c;
+	        for(File listing : regularListing){
+	        	classifyMessage(listing, MessageType.NORMAL);
+	        }        
+	      
+	        for(File listing : spamListing){
+	        	classifyMessage(listing, MessageType.SPAM);
+	        }        
 	    }
+
 
 	   
 	    public static void main(String[] args)
@@ -377,11 +391,13 @@ public class BigramBayespam {
 	            Runtime.getRuntime().exit(0);
 	        }
 
-	        listTest(dir_messages);
+	        listTest(dir_messages); ///Tests all files and creates the confusion matrix
 	        
-	        ///TODO: loop all messages to the classifyMessage method
-	        
-	        classifyMessage(listing_test[43]);
+	        ///output the confusion matrix
+	        System.out.println("True Positvie count: " + truePositive);
+	        System.out.println("False Postive count: " + falsePositive);
+	        System.out.println("True Negative count: " + trueNegative);
+	        System.out.println("False Negative count: " + falseNegative);
 	        
 	    }
 }

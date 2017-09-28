@@ -45,6 +45,11 @@ public class Bayespam
     private static int totalRegularWords = 0;
 	private static int totalSpamWords = 0;
     
+	
+	private static int truePositive = 0;	///Regular and classified regular
+	private static int falsePositive = 0;	///Spam and classified regular
+	private static int trueNegative = 0;	///Spam and classified spam
+	private static int falseNegative = 0;	///Regular and classified spam
     
     // Add a word to the vocabulary
     private static void addWord(String word, MessageType type)
@@ -225,7 +230,7 @@ public class Bayespam
             	 cclSpamValue = (double) tuningParameter/totalSpamWords;
              }	
              
-             cclSpamValue = Math.log10(cclSpamValue);	///TODO: is this the point of 2.3? we take log 10
+             cclSpamValue = Math.log10(cclSpamValue);
              cclRegularValue = Math.log10(cclRegularValue);
              
              cclRegular.put(word, cclRegularValue);
@@ -234,15 +239,15 @@ public class Bayespam
          }
     }
     
-    //TODO: finish, after asking about details
-    private static void classifyMessage(File f) throws IOException{ 
+    private static void classifyMessage(File f, MessageType type) throws IOException{ 
     	FileInputStream i_s = new FileInputStream(f);
          BufferedReader in = new BufferedReader(new InputStreamReader(i_s));
          String line;
          String word;
-         String tag;
+         MessageType tag;
          
-         double posteriRegular = probRegular;
+         //Posteri of regular and spam are initialized with the probablities
+         double posteriRegular = probRegular;	
          double posteriSpam = probSpam;
          
          while ((line = in.readLine()) != null)                      // read a line
@@ -262,19 +267,26 @@ public class Bayespam
          } 
 
          if(posteriRegular > posteriSpam){
-        	 tag = "Regular";
+        	 tag = MessageType.NORMAL;
+        	 if(type.equals(tag)){
+        		 truePositive++;
+        	 }else{
+        		 falsePositive++;
+        	 }
          }else{
-        	 tag = "Spam";
-         }
-         
-         System.out.println("Our file is tagged: " + tag + " Where spamposteri = " + posteriSpam + " and Where regularposteri = " + posteriRegular);
-         
+        	 tag = MessageType.SPAM;
+        	 if(type.equals(tag)){
+        		 trueNegative++;
+        	 }else{
+        		 falseNegative++;
+        	 }
+         }	         
          in.close();
     }
     
     
     /// List the regular and spam messages as one giant set of test messages to be classified
-    private static void listTest(File dir_location)
+    private static void listTest(File dir_location) throws IOException
     {
         // List all files in the directory passed
         File[] dir_listing = dir_location.listFiles();
@@ -286,18 +298,16 @@ public class Bayespam
             Runtime.getRuntime().exit(0);
         }
         
-        File[] listing1 = dir_listing[0].listFiles();
-        File[] listing2 = dir_listing[1].listFiles();
+        File[] regularListing = dir_listing[0].listFiles(); 	///We know this is the regular folder
+        File[] spamListing = dir_listing[1].listFiles();	///We know this is the spam folder
         
-        
-        int aLen = listing1.length;
-        int bLen = listing2.length;
-
-        File[] c = (File[]) Array.newInstance(listing1.getClass().getComponentType(), aLen+bLen);
-        System.arraycopy(listing1, 0, c, 0, aLen);
-        System.arraycopy(listing2, 0, c, aLen, bLen);
-        
-        listing_test = c;
+        for(File listing : regularListing){
+        	classifyMessage(listing, MessageType.NORMAL);
+        }        
+      
+        for(File listing : regularListing){
+        	classifyMessage(listing, MessageType.SPAM);
+        }        
     }
 
    
@@ -360,10 +370,12 @@ public class Bayespam
         }
 
         listTest(dir_messages);
-        
-        ///TODO: loop all messages to the classifyMessage method
-        
-        classifyMessage(listing_test[43]);
+                
+        ///output the confusion matrix
+        System.out.println("True Positvie count: " + truePositive);
+        System.out.println("False Postive count: " + falsePositive);
+        System.out.println("True Negative count: " + trueNegative);
+        System.out.println("False Negative count: " + falseNegative);
         
     }
 }

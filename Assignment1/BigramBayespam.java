@@ -38,7 +38,8 @@ public class BigramBayespam {
 	    private static Hashtable <String, Double> cclRegular = new Hashtable <String, Double> ();
 	    private static Hashtable <String, Double> cclSpam = new Hashtable <String, Double> ();
 
-	    
+	    ///These are our constant values
+	    private static final int sizeOfRegularFolder = 28;	///We know this is the regular/spam folder based on size(this is the max size of regular)
 	    private static final double tuningParameter = 0.02;
 	    private static final int minimalWordSize = 3;
 	    private static final int minimumCount = 4;
@@ -53,6 +54,7 @@ public class BigramBayespam {
 		private static int trueNegative = 0;	///Spam and classified spam
 		private static int falseNegative = 0;	///Regular and classified spam
 		
+		///Filters words from the vocab if they occur below the minimum count
 		private static void filterBigramCount(){
 
 			Multiple_Counter counter = new Multiple_Counter();
@@ -96,12 +98,17 @@ public class BigramBayespam {
 	            Runtime.getRuntime().exit(0);
 	        }
 
-	        listing_regular = dir_listing[0].listFiles();
-	        listing_spam    = dir_listing[1].listFiles();
+	        if(dir_listing[0].listFiles().length<sizeOfRegularFolder){
+	        	listing_regular = dir_listing[0].listFiles();
+	        	listing_spam    = dir_listing[1].listFiles();
+	        }else{
+	        	listing_spam = dir_listing[0].listFiles();
+	        	listing_regular    = dir_listing[1].listFiles();
+	        }
 	    }
 
 	    
-	    // Print the current content of the vocabulary
+	    // Print the current content of the vocabulary (debug)
 	    private static void printVocab()
 	    {
 	        Multiple_Counter counter = new Multiple_Counter();
@@ -119,7 +126,8 @@ public class BigramBayespam {
 	    }
 
 
-	    // Read the words from messages and add them to your vocabulary. The boolean type determines whether the messages are regular or not  
+	    ///Read the words from messages and add them to your vocabulary, however now also remember the read word so we can create bigrams.
+	    //The boolean type determines whether the messages are regular or not  
 	    private static void readMessages(MessageType type)
 	    throws IOException
 	    {
@@ -164,7 +172,7 @@ public class BigramBayespam {
 	    }
 	    
 	   
-		/// Print the current content of the spam CCL
+		/// Print the current content of the spam CCL (debug)
 	    private static void printCCLSpam()
 	    {
 	        Double counter;
@@ -180,6 +188,7 @@ public class BigramBayespam {
 	        }
 	    }
 
+		/// Print the current content of the regular CCL (debug)
 	    private static void printCCLRegular()
 	    {
 	        Double counter;
@@ -195,7 +204,6 @@ public class BigramBayespam {
 	        }
 	    }
 	    
-	    ///New methods below
 	    private static String cleanLine(String line){
 	    	///Below line removes all non alphabet characters, using regex
 	    	line = " " + line.replaceAll("[^a-zA-Z\\s]", "") + " ";            	
@@ -258,10 +266,7 @@ public class BigramBayespam {
 	             
 	             cclSpamValue = Math.log10(cclSpamValue);
 	             cclRegularValue = Math.log10(cclRegularValue);
-	             
-	             //System.out.println("CCL spamValue = " + cclSpamValue);
-	             //System.out.println("CCL regularValue = " + cclRegularValue);
-	             
+	            
 	             cclRegular.put(word, cclRegularValue);
 	             cclSpam.put(word, cclSpamValue);
 	             
@@ -275,7 +280,7 @@ public class BigramBayespam {
 	         String word, lastWord = "";
 	         MessageType tag;
 	         
-	         ///Posteri of regular and spam are initialized with the probablities
+	         ///Posteri of regular and spam are initialized with the probabilities
 	         double posteriRegular = probRegular;	
 	         double posteriSpam = probSpam;
 	         
@@ -285,7 +290,6 @@ public class BigramBayespam {
 	         	line = cleanLine(line);
 	         	
 	             StringTokenizer st = new StringTokenizer(line);         // parse it into words
-	         	//TODO: add last word stuff
 	             while (st.hasMoreTokens())                  // while there are still words left..
 	             {
 	            	word = st.nextToken();
@@ -302,7 +306,6 @@ public class BigramBayespam {
 	             lastWord = "";
 	         } 
 
-	         System.out.println("Test PosteriRegular: " + posteriRegular + " PosteriSpam: " + posteriSpam);
 	         if(posteriRegular > posteriSpam){
 	        	 tag = MessageType.NORMAL;
 	        	 if(type.equals(tag)){
@@ -339,7 +342,6 @@ public class BigramBayespam {
 	        File[] spamListing = dir_listing[1].listFiles();	///We know this is the spam folder
 	        
 	        for(File listing : regularListing){
-	        	System.out.println("File name regular: " +listing.getName());
 	        	classifyMessage(listing, MessageType.NORMAL);
 	        }        
 	      
@@ -369,25 +371,18 @@ public class BigramBayespam {
 	        // Read the e-mail messages
 	        readMessages(MessageType.NORMAL);
 	        readMessages(MessageType.SPAM);
-
-	        // Print out the hash table
-	        //printVocab();
 	        
-	        
+	        ///At this point we have read the bigrams, now we filter out the words that don't occur enough.
 	        filterBigramCount();
 	        
-	        ///Below takes the regular.length and spam length and calls probability
+	        ///Below 4 method calls are the same as for bayespam, essential steps for calculating CCL and probablity
 	        calcPReg(listing_regular.length, listing_spam.length);
 	        calcPSpam(listing_regular.length, listing_spam.length);
-
+	        
 	        countAllWords();
 	        
 	        calcCCL();
-	        
-	        //printCCLSpam();
-	        //printCCLRegular();
-	        
-	        
+	
 	        // Location of the directory (the path) taken from the cmd line (second arg)
 	        File dir_messages = new File( args[1] );
 	        
@@ -398,7 +393,8 @@ public class BigramBayespam {
 	            Runtime.getRuntime().exit(0);
 	        }
 
-	        listTest(dir_messages); ///Tests all files and creates the confusion matrix
+	        ///Tests all files and creates the confusion matrix
+	        listTest(dir_messages); 
 	        
 	        ///output the confusion matrix
 	        System.out.println("True Positvie count: " + truePositive);

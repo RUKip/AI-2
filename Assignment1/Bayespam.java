@@ -38,8 +38,10 @@ public class Bayespam
     private static Hashtable <String, Double> cclRegular = new Hashtable <String, Double> ();
     private static Hashtable <String, Double> cclSpam = new Hashtable <String, Double> ();
 
+    ///These are our constant values
     private static final int sizeOfRegularFolder = 28;	///We know this is the regular/spam folder based on size(this is the max size of regular)
     private static final double tuningParameter = 0.02; ///We found lower value's are best at 0.02 is the turning point 
+    
     private static double probRegular;
 	private static double probSpam;
     private static int totalRegularWords = 0;
@@ -88,7 +90,7 @@ public class Bayespam
     }
 
     
-    // Print the current content of the vocabulary
+    // Print the current content of the vocabulary (debug)
     private static void printVocab()
     {
         Multiple_Counter counter = new Multiple_Counter();
@@ -144,7 +146,7 @@ public class Bayespam
     }
     
     
-    /// Print the current content of the spam CCL
+    /// Print the current content of the spam CCL (debug)
     private static void printCCLSpam()
     {
         Double counter;
@@ -159,7 +161,8 @@ public class Bayespam
             System.out.println( word + " | CCL for spam : " + counter );
         }
     }
-
+    
+	/// Print the current content of the regular CCL (debug)
     private static void printCCLRegular()
     {
         Double counter;
@@ -245,6 +248,7 @@ public class Bayespam
          }
     }
     
+    ///Asks a file then classifies the message based on vocab, the type is to calculate the correct/incorrect classification rate.
     private static void classifyMessage(File f, MessageType type) throws IOException{ 
     	FileInputStream i_s = new FileInputStream(f);
          BufferedReader in = new BufferedReader(new InputStreamReader(i_s));
@@ -252,7 +256,7 @@ public class Bayespam
          String word;
          MessageType tag;
          
-         //Posteri of regular and spam are initialized with the probablities
+         ///Posteri of regular and spam are initialized with the probablities
          double posteriRegular = probRegular;	
          double posteriSpam = probSpam;
          
@@ -347,33 +351,16 @@ public class Bayespam
         // Read the e-mail messages
         readMessages(MessageType.NORMAL);
         readMessages(MessageType.SPAM);
-
-        // Print out the hash table
-        //printVocab();
-        
-        // Now all students must continue from here:
-        //
-        // 1) A priori class probabilities must be computed from the number of regular and spam messages
-        // 2) The vocabulary must be clean: punctuation and digits must be removed, case insensitive
-        // 3) Conditional probabilities must be computed for every word
-        // 4) A priori probabilities must be computed for every word
-        // 5) Zero probabilities must be replaced by a small estimated value
-        // 6) Bayes rule must be applied on new messages, followed by argmax classification
-        // 7) Errors must be computed on the test set (FAR = false accept rate (misses), FRR = false reject rate (false alarms))
-        // 8) Improve the code and the performance (speed, accuracy)
-        //
-        // Use the same steps to create a class BigramBayespam which implements a classifier using a vocabulary consisting of bigrams
-        
-        ///Below takes the regular.length and spam length and calls probability
+       
+        ///Below takes the regular length and spam length and calculates probability
         calcPReg(listing_regular.length, listing_spam.length);
         calcPSpam(listing_regular.length, listing_spam.length);
 
+        ///Then we count the total words so we can use this in our calcCCL
         countAllWords();
         
+        ///We calculate the class conditional likelihood
         calcCCL();
-        
-        //printCCLSpam();
-        //printCCLRegular();
         
         // Location of the directory (the path) taken from the cmd line (second arg)
         File dir_messages = new File( args[1] );
@@ -385,6 +372,7 @@ public class Bayespam
             Runtime.getRuntime().exit(0);
         }
 
+        ///Finally we test this second arg/directory with our vocab
         listTest(dir_messages);
                 
         ///output the confusion matrix

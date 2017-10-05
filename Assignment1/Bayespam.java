@@ -231,12 +231,12 @@ public class Bayespam
              if(regular != 0){
             	cclRegularValue = (double) regular/totalRegularWords;
              }else{
-            	cclRegularValue = (double) tuningParameter/totalRegularWords;
+            	cclRegularValue = (double) tuningParameter/(totalRegularWords + totalSpamWords);
              }
              if(spam != 0){
             	 cclSpamValue = (double) spam/totalSpamWords;
              }else{
-            	 cclSpamValue = (double) tuningParameter/totalSpamWords;
+            	 cclSpamValue = (double) tuningParameter/(totalRegularWord + totalSpamWords);
              }	
              
              cclSpamValue = Math.log10(cclSpamValue);

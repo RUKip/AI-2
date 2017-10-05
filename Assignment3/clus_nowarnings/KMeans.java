@@ -53,10 +53,23 @@ public class KMeans extends ClusteringAlgorithm
 		
 		// Here k new cluster are initialized
 		clusters = new Cluster[k];
-		for (int ic = 0; ic < k; ic++)
-			clusters[ic] = new Cluster();
+		for (int ic = 0; ic < k; ic++) clusters[ic] = new Cluster();
 	}
 
+	private void calcPrototypes() {
+		for (int i=0; i<k; i++) {
+			Cluster cluster = clusters[i];
+			cluster.prototype = new float[dim];
+			for(int j=0; j<dim;j++) {
+				float value = 0;
+				for(Integer client : cluster.currentMembers){
+					float[] clientVector = trainData.get(client);
+					value += clientVector[j];
+				}
+				cluster.prototype[j] = (float) value/cluster.currentMembers.size();
+			}
+		}
+	}
 
 	public boolean train()
 	{
@@ -68,8 +81,39 @@ public class KMeans extends ClusteringAlgorithm
 			clusters[classNr].currentMembers.add(i);
 		}
 		
+		calcPrototypes();
+		
+		showMembers();
 		
 		// Step 2: Generate a new partition by assigning each datapoint to its closest cluster center
+		double smallestDifference;
+		int winnerCluster;
+		for(Cluster cluster : clusters) cluster.currentMembers.clear();
+		for(int i=0; i<nrOfClients; i++){
+			smallestDifference = dim;
+			winnerCluster = -1;
+			float[] datapoint = trainData.get(i);
+			for(int j=0; j<k; j++){
+				Cluster cluster = clusters[j];
+				float difference = 0;
+				for(int dimension=0; dimension<dim; dimension++){
+					difference += Math.abs(datapoint[dimension] - cluster.prototype[dimension]);	
+				}
+				if(smallestDifference>difference){
+					smallestDifference = difference;
+					winnerCluster = j;
+				}
+			}
+			if(winnerCluster == -1){
+				System.out.println("Something went wrong, with deciding winning cluster");
+				System.exit(-1);
+			}
+			clusters[winnerCluster].currentMembers.add(i);
+		}
+	
+		calcPrototypes();
+		showMembers();
+		
 		// Step 3: recalculate cluster centers
 		// Step 4: repeat until clustermembership stabilizes
 		return false;

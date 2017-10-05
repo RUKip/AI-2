@@ -79,7 +79,7 @@ public class Bayespam
             Runtime.getRuntime().exit(0);
         }
 
-        if(dir_listing[0].listFiles().length<sizeOfRegularFolder){
+        if(dir_listing[0].listFiles().length>sizeOfRegularFolder){
         	listing_regular = dir_listing[0].listFiles();
         	listing_spam    = dir_listing[1].listFiles();
         }else{
@@ -236,7 +236,7 @@ public class Bayespam
              if(spam != 0){
             	 cclSpamValue = (double) spam/totalSpamWords;
              }else{
-            	 cclSpamValue = (double) tuningParameter/(totalRegularWord + totalSpamWords);
+            	 cclSpamValue = (double) tuningParameter/(totalRegularWords + totalSpamWords);
              }	
              
              cclSpamValue = Math.log10(cclSpamValue);

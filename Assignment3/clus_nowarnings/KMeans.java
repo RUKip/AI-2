@@ -1,7 +1,11 @@
 import java.util.*;
+import java.util.Random;
 
 public class KMeans extends ClusteringAlgorithm
 {
+	
+	private static final int nrOfClients = 70; ///Sketchy?
+	
 	// Number of clusters
 	private int k;
 
@@ -56,8 +60,15 @@ public class KMeans extends ClusteringAlgorithm
 
 	public boolean train()
 	{
+		Random random = new Random();
 	 	//implement k-means algorithm here:
 		// Step 1: Select an initial random partioning with k clusters
+		for(int i=0; i<nrOfClients; i++){
+			int classNr = random.nextInt(this.k);
+			clusters[classNr].currentMembers.add(i);
+		}
+		
+		
 		// Step 2: Generate a new partition by assigning each datapoint to its closest cluster center
 		// Step 3: recalculate cluster centers
 		// Step 4: repeat until clustermembership stabilizes

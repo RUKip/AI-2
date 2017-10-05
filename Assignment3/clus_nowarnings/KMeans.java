@@ -70,25 +70,23 @@ public class KMeans extends ClusteringAlgorithm
 			}
 		}
 	}
-
-	public boolean train()
-	{
-		Random random = new Random();
-	 	//implement k-means algorithm here:
-		// Step 1: Select an initial random partioning with k clusters
-		for(int i=0; i<nrOfClients; i++){
-			int classNr = random.nextInt(this.k);
-			clusters[classNr].currentMembers.add(i);
+	
+	private boolean checkStable(){
+		for(int i=0; i<k; i++){
+			Cluster cluster = clusters[i];
+			if (!cluster.currentMembers.equals(cluster.previousMembers)) return false;	
 		}
-		
-		calcPrototypes();
-		
-		showMembers();
-		
-		// Step 2: Generate a new partition by assigning each datapoint to its closest cluster center
+		return true;
+	}
+	
+	private void reassignClusters(){
 		double smallestDifference;
 		int winnerCluster;
-		for(Cluster cluster : clusters) cluster.currentMembers.clear();
+		for(Cluster cluster : clusters){
+			cluster.previousMembers.clear();
+			for(Integer client : cluster.currentMembers) cluster.previousMembers.add(client);
+			cluster.currentMembers.clear();
+		}
 		for(int i=0; i<nrOfClients; i++){
 			smallestDifference = dim;
 			winnerCluster = -1;
@@ -110,12 +108,32 @@ public class KMeans extends ClusteringAlgorithm
 			}
 			clusters[winnerCluster].currentMembers.add(i);
 		}
-	
+	}
+
+	public boolean train()
+	{
+		Random random = new Random();
+	 	//implement k-means algorithm here:
+		// Step 1: Select an initial random partioning with k clusters
+		for(int i=0; i<nrOfClients; i++){
+			int classNr = random.nextInt(this.k);
+			clusters[classNr].currentMembers.add(i);
+		}
+		
 		calcPrototypes();
-		showMembers();
+		
+		// Step 2: Generate a new partition by assigning each datapoint to its closest cluster center
+		reassignClusters();
 		
 		// Step 3: recalculate cluster centers
+		calcPrototypes();
+		
 		// Step 4: repeat until clustermembership stabilizes
+		while(!checkStable()){
+			reassignClusters();
+			calcPrototypes();
+			//showMembers(); for testing purposes
+		}
 		return false;
 	}
 

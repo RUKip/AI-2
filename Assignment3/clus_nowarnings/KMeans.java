@@ -93,7 +93,7 @@ public class KMeans extends ClusteringAlgorithm
 			float[] datapoint = trainData.get(i);
 			for(int j=0; j<k; j++){
 				Cluster cluster = clusters[j];
-				float difference = 0;
+				double difference = 0;
 				for(int dimension=0; dimension<dim; dimension++){
 					difference += Math.pow(datapoint[dimension] - cluster.prototype[dimension], 2);	
 				}

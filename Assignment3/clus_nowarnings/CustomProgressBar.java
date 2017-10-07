@@ -17,18 +17,25 @@ public class CustomProgressBar extends JFrame{
 
     public CustomProgressBar(int maxEpochs) {
         super("Waiting for kohonen to finish");
-        setContentPane(this.panel);
+        
+        this.panel = new JPanel();
+        this.progressBar1 = new JProgressBar();
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setSize(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
         this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);
         setVisible(true);
-
-
+        
+        setContentPane(panel);
+        
         progressBar1.setValue(0);
         progressBar1.setStringPainted(true);
         progressBar1.setMinimum(0);
         progressBar1.setMaximum(maxEpochs);
+        
+        panel.add(progressBar1, null);
+        
+        pack();
     }
     
     public void setEpoch(int epoch){
@@ -38,5 +45,4 @@ public class CustomProgressBar extends JFrame{
     private void createUIComponents() {
         // TODO: place custom component creation code here
     }
-
 }

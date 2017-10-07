@@ -67,7 +67,8 @@ public class Kohonen extends ClusteringAlgorithm
 	{
 		CustomProgressBar progressBar = new CustomProgressBar(this.epochs);
 		
-		for(int epoch = 0; epoch<this.epochs; epoch++){
+		int epoch;
+		for(epoch = 0; epoch<this.epochs; epoch++){
 			// Step 1: initialize map with random vectors (A good place to do this, is in the initialisation of the clusters)
 			// Repeat 'epochs' times:
 				// Step 2: Calculate the squareSize and the learningRate, these decrease lineary with the number of epochs.
@@ -77,6 +78,8 @@ public class Kohonen extends ClusteringAlgorithm
 			// Since training kohonen maps can take quite a while, presenting the user with a progress bar would be nice
 			progressBar.setEpoch(epoch);
 		}
+		progressBar.setEpoch(epoch);
+
 		return true;
 	}
 	

@@ -4,7 +4,7 @@ import java.util.Random;
 public class KMeans extends ClusteringAlgorithm
 {
 	
-	private static final int nrOfClients = 70; ///Sketchy?
+	private static final int nrOfClients = 70;
 	
 	// Number of clusters
 	private int k;
@@ -88,15 +88,16 @@ public class KMeans extends ClusteringAlgorithm
 			cluster.currentMembers.clear();
 		}
 		for(int i=0; i<nrOfClients; i++){
-			smallestDifference = dim;
+			smallestDifference = dim*dim;
 			winnerCluster = -1;
 			float[] datapoint = trainData.get(i);
 			for(int j=0; j<k; j++){
 				Cluster cluster = clusters[j];
 				float difference = 0;
 				for(int dimension=0; dimension<dim; dimension++){
-					difference += Math.abs(datapoint[dimension] - cluster.prototype[dimension]);	
+					difference += Math.pow(datapoint[dimension] - cluster.prototype[dimension], 2);	
 				}
+				difference = Math.sqrt(difference);
 				if(smallestDifference>difference){
 					smallestDifference = difference;
 					winnerCluster = j;

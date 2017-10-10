@@ -143,12 +143,12 @@ public class KMeans extends ClusteringAlgorithm
 		int prefetchedHTMLCount = 0;
 		int hits = 0;
 		int requests = 0;
-		int[][] prefetchedPCluster = new int[k][nrOfClients];
-		for(int j=0; j<k; j++){
+		int[][] prefetchedPCluster = new int[k][dim];
+		for(int j=0; j<k; j++){ //Take each cluster
 			Cluster cluster = clusters[j];
 			float[] thresholds = cluster.prototype;
-			for(int dimension=0; dimension<dim; dimension++){
-				if(thresholds[dimension] > prefetchThreshold){
+			for(int dimension=0; dimension<dim; dimension++){ //Take each dimension from the cluster
+				if(thresholds[dimension] > prefetchThreshold){ 	//Check which urls we should prefetch if part of this cluster
 					prefetchedPCluster[j][dimension] = 1;
 					prefetchedHTMLCount++;
 				}else{
@@ -156,7 +156,7 @@ public class KMeans extends ClusteringAlgorithm
 				}
 			}
 		}
-
+				
 		for(int i=0; i<nrOfClients; i++){
 			for(int j=0; j<k; j++){
 				Cluster cluster = clusters[j];
@@ -166,11 +166,13 @@ public class KMeans extends ClusteringAlgorithm
 						if(values[dimension] == 1){
 							requests++;
 							hits += prefetchedPCluster[j][dimension];
+							prefetchedPCluster[j][dimension] = 0;
 						}
 					}
 				}
 			}
 		}
+		
 		this.hitrate = (double) hits/requests;
 		this.accuracy = (double) hits/prefetchedHTMLCount;
 		return true;

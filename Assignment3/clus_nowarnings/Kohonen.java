@@ -122,13 +122,13 @@ public class Kohonen extends ClusteringAlgorithm
 					System.out.println("Something went wrong, with deciding winning cluster");
 					System.exit(-1);
 				}
-				clusters[winnerClusterX][winnerClusterY].currentMembers.add(i);
+				clusters[winnerClusterX][winnerClusterY].currentMembers.add(client);
 				for(int i=(winnerClusterX-neigbourSize); i<(winnerClusterX+neigbourSize+1); i++){
 					if(i<n || i>=0){
-						for(int j=(winnerClusterY-neigbourSize); j<(winnerClusterY+neigbourSize+1; j++){
+						for(int j=(winnerClusterY-neigbourSize); j<(winnerClusterY+neigbourSize+1); j++){
 							if(j<n || j>=0){
 								float[] myBeautifulPrototype = clusters[i][j].prototype;
-								for(int dimension=0; dimension<dim; dimension++) myBeautifulPrototype[dimension] = ((1-learningRate)*myBeautifulPrototype[dimension]) + (learningRate*inputVector[dimension]);
+								for(int dimension=0; dimension<dim; dimension++) myBeautifulPrototype[dimension] = (float) (((1-learningRate)*myBeautifulPrototype[dimension]) + (learningRate*inputVector[dimension]));
 							}
 						}
 					}	

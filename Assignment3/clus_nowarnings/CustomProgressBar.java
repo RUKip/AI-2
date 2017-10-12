@@ -20,7 +20,7 @@ public class CustomProgressBar extends JFrame{
         
         this.panel = new JPanel();
         this.progressBar1 = new JProgressBar();
-        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setDefaultCloseOperation(JFrame.HIDE_ON_CLOSE);
         setSize(DEFAULT_FRAME_WIDTH, DEFAULT_FRAME_HEIGHT);
         Dimension dim = Toolkit.getDefaultToolkit().getScreenSize();
         this.setLocation(dim.width/2-this.getSize().width/2, dim.height/2-this.getSize().height/2);

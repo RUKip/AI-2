@@ -142,32 +142,22 @@ public class KMeans extends ClusteringAlgorithm
 	{
 		int prefetchedHTMLCount = 0;
 		int hits = 0;
-		int requests = 0;
-		int[][] prefetchedPCluster = new int[k][dim];
+		int requests = 0;		
 		for(int j=0; j<k; j++){ //Take each cluster
 			Cluster cluster = clusters[j];
-			float[] thresholds = cluster.prototype;
-			for(int dimension=0; dimension<dim; dimension++){ //Take each dimension from the cluster
-				if(thresholds[dimension] > prefetchThreshold){ 	//Check which urls we should prefetch if part of this cluster
-					prefetchedPCluster[j][dimension] = 1;
-					prefetchedHTMLCount++;
-				}else{
-					prefetchedPCluster[j][dimension] = 0;
-				}
-			}
-		}
-				
-		for(int i=0; i<nrOfClients; i++){
-			for(int j=0; j<k; j++){
-				Cluster cluster = clusters[j];
-				if(cluster.currentMembers.contains(i)){
-					float[] values = testData.get(i);
-					for(int dimension=0; dimension<dim; dimension++){
-						if(values[dimension] == 1){
-							requests++;
-							hits += prefetchedPCluster[j][dimension];
-							prefetchedPCluster[j][dimension] = 0;
+			Set<Integer> members = cluster.currentMembers;
+			float[] proto = cluster.prototype;
+			for(Integer member : members){
+				float[] values = testData.get(member);
+				for(int dimension=0; dimension<dim; dimension++){
+					if(proto[dimension]>prefetchThreshold){
+						prefetchedHTMLCount++;
+						if(values[dimension]==1){
+							hits++;
 						}
+					}
+					if(values[dimension]==1){
+						requests++;
 					}
 				}
 			}

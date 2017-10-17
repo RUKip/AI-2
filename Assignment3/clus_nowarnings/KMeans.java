@@ -56,6 +56,7 @@ public class KMeans extends ClusteringAlgorithm
 		for (int ic = 0; ic < k; ic++) clusters[ic] = new Cluster();
 	}
 
+	///The cluster prototypes are recalculated based on the mean of all the values of the members of that cluster
 	private void calcPrototypes() {
 		for (int i=0; i<k; i++) {
 			Cluster cluster = clusters[i];
@@ -71,6 +72,7 @@ public class KMeans extends ClusteringAlgorithm
 		}
 	}
 	
+	///small check to see if our member set has changed or that we can stop
 	private boolean checkStable(){
 		for(int i=0; i<k; i++){
 			Cluster cluster = clusters[i];
@@ -79,14 +81,17 @@ public class KMeans extends ClusteringAlgorithm
 		return true;
 	}
 	
+	
 	private void reassignClusters(){
 		double smallestDifference;
 		int winnerCluster;
+		///Here we reset the clusters current members and prevous, and store the new previous members
 		for(Cluster cluster : clusters){
 			cluster.previousMembers.clear();
 			for(Integer client : cluster.currentMembers) cluster.previousMembers.add(client);
 			cluster.currentMembers.clear();
 		}
+		///Below we calculate the winners
 		for(int i=0; i<nrOfClients; i++){
 			smallestDifference = dim*dim;
 			winnerCluster = -1;
@@ -94,6 +99,7 @@ public class KMeans extends ClusteringAlgorithm
 			for(int j=0; j<k; j++){
 				Cluster cluster = clusters[j];
 				double difference = 0;
+				///Here we decide winner cluster based on euclidan distance
 				for(int dimension=0; dimension<dim; dimension++){
 					difference += Math.pow(datapoint[dimension] - cluster.prototype[dimension], 2);	
 				}
@@ -107,6 +113,7 @@ public class KMeans extends ClusteringAlgorithm
 				System.out.println("Something went wrong, with deciding winning cluster");
 				System.exit(-1);
 			}
+			///new members are added
 			clusters[winnerCluster].currentMembers.add(i);
 		}
 	}
@@ -114,7 +121,6 @@ public class KMeans extends ClusteringAlgorithm
 	public boolean train()
 	{
 		Random random = new Random();
-	 	//implement k-means algorithm here:
 		// Step 1: Select an initial random partioning with k clusters
 		for(int i=0; i<nrOfClients; i++){
 			int classNr = random.nextInt(this.k);
@@ -150,13 +156,13 @@ public class KMeans extends ClusteringAlgorithm
 			for(Integer member : members){
 				float[] values = testData.get(member);
 				for(int dimension=0; dimension<dim; dimension++){
-					if(proto[dimension]>prefetchThreshold){
+					if(proto[dimension]>prefetchThreshold){ ///test if they pass the threshold, if so the should be prefetched
 						prefetchedHTMLCount++;
-						if(values[dimension]==1){
+						if(values[dimension]==1){ ///Test if they are requested, if so we have a hit
 							hits++;
 						}
 					}
-					if(values[dimension]==1){
+					if(values[dimension]==1){	///Test if they are requested, we don't care here about prefetched or not
 						requests++;
 					}
 				}

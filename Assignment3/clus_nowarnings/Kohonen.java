@@ -102,7 +102,7 @@ public class Kohonen extends ClusteringAlgorithm
 				double smallestDifference = dim*dim;
 				int winnerClusterX = -1;
 				int winnerClusterY = -1;
-				float[] inputVector = trainData.get(client);
+				float[] inputVector = trainData.get(client);		
 				for(int i=0; i<n; i++){
 					for(int j=0; j<n; j++){
 						float[] unit = clusters[i][j].prototype;
@@ -117,7 +117,7 @@ public class Kohonen extends ClusteringAlgorithm
 							winnerClusterY = j; ///Our BMU Y
 						}
 					}
-				}
+				}			
 				if(winnerClusterX == -1 || winnerClusterY == -1){
 					System.out.println("Something went wrong, with deciding winning cluster");
 					System.exit(-1);
@@ -138,7 +138,9 @@ public class Kohonen extends ClusteringAlgorithm
 			progressBar.setEpoch(epoch);
 		}
 		progressBar.setEpoch(epoch);
-
+		progressBar.setVisible(false); //you can't see me!
+		progressBar.dispose(); //Destroy the JFrame object
+		
 		return true;
 	}
 	

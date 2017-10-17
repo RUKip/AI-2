@@ -49,6 +49,7 @@ public class Kohonen extends ClusteringAlgorithm
 	
 	public Kohonen(int n, int epochs, Vector<float[]> trainData, Vector<float[]> testData, int dim)
 	{
+		///Initializing parameters
 		this.n = n;
 		this.epochs = epochs;
 		prefetchThreshold = 0.5;
@@ -85,19 +86,18 @@ public class Kohonen extends ClusteringAlgorithm
 		int epoch;
 		// Repeat 'epochs' times:
 		for(epoch = 0; epoch<this.epochs; epoch++){
-				// Step 2: Calculate the squareSize and the learningRate, these decrease lineary with the number of epochs.
-				// Step 3: Every input vector is presented to the map (always in the same order)	
-				// For each vector its Best Matching Unit is found, and :
-					// Step 4: All nodes within the neighbourhood of the BMU are changed, you don't have to use distance relative learning.
-			// Since training kohonen maps can take quite a while, presenting the user with a progress bar would be nice
+			// Step 2: Calculate the squareSize and the learningRate, these decrease lineary with the number of epochs.	
 			double updateVariable = (1-((double)epoch/epochs));
+			///η = 0.8(1−t/tmax)
 			neigbourSize = (int) (initialNeigbourSize*updateVariable);
+			///r = N/2(1−t/tmax)
 			learningRate = initialLearningRate*updateVariable;
-			
+			///Empty the memberlist of the clusters for new epoch
 			for(Cluster[] clusterRow : clusters){
 				for(Cluster cluster : clusterRow) cluster.currentMembers.clear();
 			}
 			
+			// Step 3: Every input vector is presented to the map (always in the same order)
 			for(int client=0; client<nrOfClients; client++){ 
 				double smallestDifference = dim*dim;
 				int winnerClusterX = -1;
@@ -108,9 +108,12 @@ public class Kohonen extends ClusteringAlgorithm
 						float[] unit = clusters[i][j].prototype;
 						double difference = 0;
 						for(int dimension=0; dimension<dim; dimension++){
+							///Calculate Euclidean distance part 1
 							difference += Math.pow(inputVector[dimension] - unit[dimension], 2);	
 						}
+						///Calculate Euclidean distance part 2
 						difference = Math.sqrt(difference);
+						// For each vector its Best Matching Unit is found, and :
 						if(smallestDifference>difference){
 							smallestDifference = difference;
 							winnerClusterX = i; ///Our BMU X
@@ -122,24 +125,32 @@ public class Kohonen extends ClusteringAlgorithm
 					System.out.println("Something went wrong, with deciding winning cluster");
 					System.exit(-1);
 				}
+				// Step 4: All nodes within the neighbourhood of the BMU are changed, you don't have to use distance relative learning.
 				clusters[winnerClusterX][winnerClusterY].currentMembers.add(client);
+				///Loop over neighbouring clusters
 				for(int i=(winnerClusterX-neigbourSize); i<(winnerClusterX+neigbourSize+1); i++){
+					///make sure you're not out of bounds
 					if(i<n && i>=0){
 						for(int j=(winnerClusterY-neigbourSize); j<(winnerClusterY+neigbourSize+1); j++){
+							///make sure you're not out of bounds
 							if(j<n && j>=0){
 								float[] myBeautifulPrototype = clusters[i][j].prototype;
-								for(int dimension=0; dimension<dim; dimension++) myBeautifulPrototype[dimension] = (float) (((1-learningRate)*myBeautifulPrototype[dimension]) + (learningRate*inputVector[dimension]));
+								for(int dimension=0; dimension<dim; dimension++) {
+									///P_NEW = (1−η)∗P_OLD+η∗X
+									myBeautifulPrototype[dimension] = (float) (((1-learningRate)*myBeautifulPrototype[dimension]) + (learningRate*inputVector[dimension]));
+								}
 							}
 						}
 					}	
 				}
 						
 			}
+			// Since training kohonen maps can take quite a while, presenting the user with a progress bar would be nice
 			progressBar.setEpoch(epoch);
 		}
 		progressBar.setEpoch(epoch);
-		progressBar.setVisible(false); //you can't see me!
-		progressBar.dispose(); //Destroy the JFrame object
+		progressBar.setVisible(false); ///you can't see me!
+		progressBar.dispose();
 		
 		return true;
 	}
@@ -150,20 +161,20 @@ public class Kohonen extends ClusteringAlgorithm
 		int hits = 0;
 		int requests = 0;		
 		for(int i=0; i<n; i++){
-			for(int j=0; j<n; j++){ //Take each cluster
+			for(int j=0; j<n; j++){ ///Take each cluster
 				Cluster cluster = clusters[i][j];
 				Set<Integer> members = cluster.currentMembers;
 				float[] proto = cluster.prototype;
 				for(Integer member : members){
 					float[] values = testData.get(member);
 					for(int dimension=0; dimension<dim; dimension++){
-						if(proto[dimension]>prefetchThreshold){
+						if(proto[dimension]>prefetchThreshold){ ///test if they pass the threshold, if so the should be prefetched
 							prefetchedHTMLCount++;
-							if(values[dimension]==1){
+							if(values[dimension]==1){ ///Test if they are requested, if so we have a hit
 								hits++;
 							}
 						}
-						if(values[dimension]==1){
+						if(values[dimension]==1){ ///Test if they are requested, we don't care here about prefetched or not
 							requests++;
 						}
 					}

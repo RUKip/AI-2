@@ -149,7 +149,7 @@ public class KMeans extends ClusteringAlgorithm
 		int prefetchedHTMLCount = 0;
 		int hits = 0;
 		int requests = 0;		
-		for(int j=0; j<k; j++){ //Take each cluster
+		for(int j=0; j<k; j++){ ///Take each cluster
 			Cluster cluster = clusters[j];
 			Set<Integer> members = cluster.currentMembers;
 			float[] proto = cluster.prototype;
@@ -162,7 +162,7 @@ public class KMeans extends ClusteringAlgorithm
 							hits++;
 						}
 					}
-					if(values[dimension]==1){	///Test if they are requested, we don't care here about prefetched or not
+					if(values[dimension]==1){ ///Test if they are requested, we don't care here about prefetched or not
 						requests++;
 					}
 				}
